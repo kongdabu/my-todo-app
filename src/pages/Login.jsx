@@ -19,7 +19,12 @@ export default function Login() {
     setLoading(true)
 
     if (isSignup) {
-      const { error } = await supabase.auth.signUp({ email, password })
+      const redirectTo = `${window.location.origin}${import.meta.env.BASE_URL}`
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: redirectTo },
+      })
       if (error) setError(error.message)
       else setMessage('가입 확인 이메일을 발송했습니다. 이메일을 확인해 주세요.')
     } else {
