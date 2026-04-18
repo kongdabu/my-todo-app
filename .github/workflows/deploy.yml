@@ -20,6 +20,17 @@ jobs:
 
       - run: npm ci
 
+      - name: Check required secrets
+        run: |
+          if [ -z "$VITE_SUPABASE_URL" ] || [ -z "$VITE_SUPABASE_ANON_KEY" ]; then
+            echo "❌ VITE_SUPABASE_URL 또는 VITE_SUPABASE_ANON_KEY Secret이 설정되지 않았습니다."
+            echo "GitHub 저장소 Settings > Secrets and variables > Actions 에서 등록해주세요."
+            exit 1
+          fi
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
       - run: npm run build
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
