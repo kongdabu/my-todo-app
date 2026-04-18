@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
 import { useTodoStore } from './store/todoStore'
@@ -11,6 +11,7 @@ import Dashboard from './pages/Dashboard'
 
 function AppLayout() {
   const { fetchTodos, autoUpdateDelayed, sidebarFilter } = useTodoStore()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   useEffect(() => {
     fetchTodos().then(() => autoUpdateDelayed())
@@ -18,9 +19,9 @@ function AppLayout() {
 
   return (
     <div className="flex flex-col h-screen bg-gray-100">
-      <Header />
+      <Header onMenuClick={() => setSidebarOpen(true)} />
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
+        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         <main className="flex flex-1 overflow-hidden bg-gray-50">
           {sidebarFilter === 'dashboard' ? <Dashboard /> : <TodoPage />}
         </main>

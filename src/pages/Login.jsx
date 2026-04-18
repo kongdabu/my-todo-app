@@ -3,6 +3,30 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { CheckSquare } from 'lucide-react'
 
+const AUTH_ERRORS = {
+  'Invalid login credentials': '이메일 또는 비밀번호가 올바르지 않습니다.',
+  'Email not confirmed': '이메일 인증이 완료되지 않았습니다. 확인 메일을 확인해 주세요.',
+  'User already registered': '이미 가입된 이메일입니다.',
+  'Password should be at least 6 characters': '비밀번호는 최소 8자 이상이어야 합니다.',
+  'Unable to validate email address: invalid format': '올바른 이메일 형식이 아닙니다.',
+  'Email rate limit exceeded': '잠시 후 다시 시도해 주세요.',
+  'Too many requests': '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.',
+}
+
+const translateError = (msg) => {
+  for (const [key, value] of Object.entries(AUTH_ERRORS)) {
+    if (msg?.includes(key)) return value
+  }
+  return '오류가 발생했습니다. 다시 시도해 주세요.'
+}
+
+const validatePassword = (pw) => {
+  if (pw.length < 8) return '비밀번호는 최소 8자 이상이어야 합니다.'
+  if (!/[A-Za-z]/.test(pw)) return '비밀번호에 영문자를 포함해야 합니다.'
+  if (!/[0-9]/.test(pw)) return '비밀번호에 숫자를 포함해야 합니다.'
+  return null
+}
+
 export default function Login() {
   const navigate = useNavigate()
   const [isSignup, setIsSignup] = useState(false)
@@ -16,23 +40,42 @@ export default function Login() {
     e.preventDefault()
     setError('')
     setMessage('')
+
+    const trimmedEmail = email.trim()
+
+    if (isSignup) {
+      const pwError = validatePassword(password)
+      if (pwError) { setError(pwError); return }
+    }
+
     setLoading(true)
 
     if (isSignup) {
       const redirectTo = `${window.location.origin}${import.meta.env.BASE_URL}`
       const { error } = await supabase.auth.signUp({
-        email,
+        email: trimmedEmail,
         password,
         options: { emailRedirectTo: redirectTo },
       })
-      if (error) setError(error.message)
+      if (error) setError(translateError(error.message))
       else setMessage('가입 확인 이메일을 발송했습니다. 이메일을 확인해 주세요.')
     } else {
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) setError(error.message)
+      const { error } = await supabase.auth.signInWithPassword({
+        email: trimmedEmail,
+        password,
+      })
+      if (error) setError(translateError(error.message))
       else navigate('/')
     }
+
     setLoading(false)
+  }
+
+  const switchMode = () => {
+    setIsSignup(!isSignup)
+    setError('')
+    setMessage('')
+    setPassword('')
   }
 
   return (
@@ -55,6 +98,7 @@ export default function Login() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              autoComplete="email"
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="you@example.com"
             />
@@ -66,18 +110,30 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              autoComplete={isSignup ? 'new-password' : 'current-password'}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="••••••••"
+              placeholder={isSignup ? '영문+숫자 8자 이상' : '••••••••'}
             />
+            {isSignup && (
+              <p className="text-xs text-gray-400 mt-1">영문 + 숫자 조합 8자 이상</p>
+            )}
           </div>
 
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-          {message && <p className="text-green-600 text-sm">{message}</p>}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+              <p className="text-red-600 text-sm">{error}</p>
+            </div>
+          )}
+          {message && (
+            <div className="bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+              <p className="text-green-700 text-sm">{message}</p>
+            </div>
+          )}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg text-sm transition disabled:opacity-50"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg text-sm transition disabled:opacity-50"
           >
             {loading ? '처리 중...' : isSignup ? '가입하기' : '로그인'}
           </button>
@@ -86,7 +142,7 @@ export default function Login() {
         <p className="text-center text-sm text-gray-500 mt-6">
           {isSignup ? '이미 계정이 있으신가요?' : '계정이 없으신가요?'}{' '}
           <button
-            onClick={() => { setIsSignup(!isSignup); setError(''); setMessage('') }}
+            onClick={switchMode}
             className="text-blue-600 hover:underline font-medium"
           >
             {isSignup ? '로그인' : '회원가입'}

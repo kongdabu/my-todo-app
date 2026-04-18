@@ -53,16 +53,16 @@ export default function DetailPanel() {
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
   }
 
-  return (
-    <aside className="w-80 shrink-0 bg-white border-l border-gray-200 flex flex-col overflow-y-auto">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+  const panelContent = (
+    <>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 shrink-0">
         <h2 className="font-semibold text-gray-700 text-sm">상세 / 편집</h2>
-        <button onClick={() => setSelectedTodo(null)} className="text-gray-400 hover:text-gray-600">
+        <button onClick={() => setSelectedTodo(null)} className="text-gray-400 hover:text-gray-600 p-1" aria-label="닫기">
           <X size={18} />
         </button>
       </div>
 
-      <div className="p-4 space-y-4 flex-1">
+      <div className="p-4 space-y-4 flex-1 overflow-y-auto">
         <div>
           <label className="text-xs font-medium text-gray-500 mb-1 block">제목</label>
           <input
@@ -137,7 +137,7 @@ export default function DetailPanel() {
         )}
       </div>
 
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-4 border-t border-gray-200 shrink-0">
         <button
           onClick={handleDelete}
           className="w-full flex items-center justify-center gap-2 text-sm text-red-500 hover:bg-red-50 border border-red-200 rounded-lg py-2 transition"
@@ -146,6 +146,28 @@ export default function DetailPanel() {
           삭제
         </button>
       </div>
-    </aside>
+    </>
+  )
+
+  return (
+    <>
+      {/* 모바일: 하단 슬라이드업 오버레이 */}
+      <div className="md:hidden fixed inset-0 z-40 flex flex-col justify-end">
+        <div
+          className="absolute inset-0 bg-black/40"
+          onClick={() => setSelectedTodo(null)}
+          aria-hidden="true"
+        />
+        <div className="relative bg-white rounded-t-2xl flex flex-col max-h-[85vh]">
+          <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mt-3 mb-1 shrink-0" />
+          {panelContent}
+        </div>
+      </div>
+
+      {/* 데스크탑: 우측 사이드 패널 */}
+      <aside className="hidden md:flex w-80 shrink-0 bg-white border-l border-gray-200 flex-col overflow-hidden">
+        {panelContent}
+      </aside>
+    </>
   )
 }
