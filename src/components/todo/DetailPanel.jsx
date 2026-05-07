@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { X, Trash2 } from 'lucide-react'
 import { useTodoStore } from '../../store/todoStore'
 
@@ -8,10 +8,21 @@ const priorityOptions = ['긴급', '중요', '일반', '장기']
 export default function DetailPanel() {
   const { selectedTodo, setSelectedTodo, updateTodo, deleteTodo } = useTodoStore()
   const [form, setForm] = useState(null)
+  const descRef = useRef(null)
+
+  const autoResize = useCallback((el) => {
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = el.scrollHeight + 'px'
+  }, [])
 
   useEffect(() => {
     if (selectedTodo) setForm({ ...selectedTodo })
   }, [selectedTodo])
+
+  useEffect(() => {
+    autoResize(descRef.current)
+  }, [form?.description, autoResize])
 
   if (!selectedTodo || !form) return null
 
@@ -76,11 +87,12 @@ export default function DetailPanel() {
         <div>
           <label className="text-xs font-medium text-gray-500 mb-1 block">설명</label>
           <textarea
+            ref={descRef}
             value={form.description || ''}
-            onChange={(e) => handleChange('description', e.target.value)}
+            onChange={(e) => { handleChange('description', e.target.value); autoResize(e.target) }}
             onBlur={() => handleBlur('description')}
             rows={3}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none overflow-hidden"
           />
         </div>
 
