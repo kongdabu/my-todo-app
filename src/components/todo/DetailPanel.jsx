@@ -177,7 +177,7 @@ export default function DetailPanel() {
       </div>
 
       {/* 데스크탑: 우측 사이드 패널 */}
-      <aside className="hidden md:flex w-96 shrink-0 bg-white border-l border-gray-200 flex-col overflow-hidden">
+      <aside className="hidden md:flex w-[480px] shrink-0 bg-white border-l border-gray-200 flex-col overflow-hidden">
         {panelContent}
       </aside>
     </>
