@@ -8,6 +8,7 @@ const priorityOptions = ['긴급', '중요', '일반', '장기']
 export default function DetailPanel() {
   const { selectedTodo, setSelectedTodo, updateTodo, deleteTodo } = useTodoStore()
   const [form, setForm] = useState(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const descRef = useRef(null)
 
   const autoResize = useCallback((el) => {
@@ -53,8 +54,11 @@ export default function DetailPanel() {
     updateTodo(selectedTodo.id, updated)
   }
 
-  const handleDelete = async () => {
-    if (confirm('삭제하시겠습니까?')) deleteTodo(selectedTodo.id)
+  const handleDelete = () => setShowDeleteConfirm(true)
+
+  const confirmDelete = async () => {
+    setShowDeleteConfirm(false)
+    await deleteTodo(selectedTodo.id)
   }
 
   const formatDatetimeLocal = (iso) => {
@@ -158,6 +162,29 @@ export default function DetailPanel() {
           삭제
         </button>
       </div>
+
+      {showDeleteConfirm && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/30 rounded-inherit">
+          <div className="bg-white rounded-xl shadow-lg p-5 mx-4 w-full max-w-xs">
+            <p className="text-sm font-semibold text-gray-800 mb-1">할 일 삭제</p>
+            <p className="text-sm text-gray-500 mb-4">삭제하면 복구할 수 없습니다. 계속하시겠습니까?</p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 py-2 text-sm rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition"
+              >
+                취소
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="flex-1 py-2 text-sm rounded-lg bg-red-500 text-white hover:bg-red-600 transition"
+              >
+                삭제
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 
@@ -177,7 +204,7 @@ export default function DetailPanel() {
       </div>
 
       {/* 데스크탑: 우측 사이드 패널 */}
-      <aside className="hidden md:flex w-[480px] shrink-0 bg-white border-l border-gray-200 flex-col overflow-hidden">
+      <aside className="hidden md:flex w-[480px] shrink-0 bg-white border-l border-gray-200 flex-col overflow-hidden relative">
         {panelContent}
       </aside>
     </>

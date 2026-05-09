@@ -26,6 +26,9 @@ export const useTodoStore = create((set, get) => ({
   },
 
   autoUpdateDelayed: async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
     const today = startOfDay(new Date())
     const { todos } = get()
     const toDelay = todos.filter(
@@ -33,7 +36,7 @@ export const useTodoStore = create((set, get) => ({
         isAfter(today, startOfDay(new Date(t.due_date)))
     )
     for (const t of toDelay) {
-      await supabase.from('todos').update({ status: '지연' }).eq('id', t.id)
+      await supabase.from('todos').update({ status: '지연' }).eq('id', t.id).eq('user_id', user.id)
     }
     if (toDelay.length > 0) {
       await get().fetchTodos()
