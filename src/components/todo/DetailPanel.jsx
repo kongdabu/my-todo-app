@@ -13,7 +13,7 @@ export default function DetailPanel() {
   const autoResize = useCallback((el) => {
     if (!el) return
     el.style.height = 'auto'
-    el.style.height = el.scrollHeight + 'px'
+    el.style.height = Math.min(el.scrollHeight, 200) + 'px'
   }, [])
 
   useEffect(() => {
@@ -91,8 +91,8 @@ export default function DetailPanel() {
             value={form.description || ''}
             onChange={(e) => { handleChange('description', e.target.value); autoResize(e.target) }}
             onBlur={() => handleBlur('description')}
-            rows={3}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none overflow-hidden"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none overflow-y-auto"
+            style={{ minHeight: '72px', maxHeight: '200px' }}
           />
         </div>
 
