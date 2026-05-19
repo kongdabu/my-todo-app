@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { X, Trash2 } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { useTodoStore } from '../../store/todoStore'
 
 const statusOptions = ['미접수', '진행', '지연', '완료']
@@ -9,6 +11,7 @@ export default function DetailPanel() {
   const { selectedTodo, setSelectedTodo, updateTodo, deleteTodo } = useTodoStore()
   const [form, setForm] = useState(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDescFocused, setIsDescFocused] = useState(false)
   const descRef = useRef(null)
 
   const autoResize = useCallback((el) => {
@@ -90,14 +93,28 @@ export default function DetailPanel() {
 
         <div>
           <label className="text-xs font-medium text-gray-500 mb-1 block">설명</label>
-          <textarea
-            ref={descRef}
-            value={form.description || ''}
-            onChange={(e) => { handleChange('description', e.target.value); autoResize(e.target) }}
-            onBlur={() => handleBlur('description')}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none overflow-y-auto"
-            style={{ minHeight: '72px', maxHeight: '200px' }}
-          />
+          {isDescFocused || !form.description ? (
+            <textarea
+              ref={descRef}
+              value={form.description || ''}
+              onChange={(e) => { handleChange('description', e.target.value); autoResize(e.target) }}
+              onFocus={() => setIsDescFocused(true)}
+              onBlur={() => { setIsDescFocused(false); handleBlur('description') }}
+              placeholder="마크다운 형식으로 입력하세요..."
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none overflow-y-auto"
+              style={{ minHeight: '72px', maxHeight: '200px' }}
+            />
+          ) : (
+            <div
+              onClick={() => setIsDescFocused(true)}
+              className="markdown-body w-full border border-gray-200 rounded-lg px-3 py-2 text-sm cursor-text overflow-y-auto hover:border-gray-300 transition-colors"
+              style={{ minHeight: '72px', maxHeight: '200px' }}
+            >
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {form.description}
+              </ReactMarkdown>
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-3">
