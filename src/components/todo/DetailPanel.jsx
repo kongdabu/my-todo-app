@@ -28,6 +28,10 @@ export default function DetailPanel() {
     autoResize(descRef.current)
   }, [form?.description, autoResize])
 
+  useEffect(() => {
+    if (isDescFocused) autoResize(descRef.current)
+  }, [isDescFocused, autoResize])
+
   if (!selectedTodo || !form) return null
 
   const handleChange = (field, value) => {
