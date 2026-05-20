@@ -2,6 +2,20 @@ import { create } from 'zustand'
 import { supabase } from '../lib/supabaseClient'
 import { isAfter, startOfDay, startOfWeek, endOfWeek } from 'date-fns'
 
+const ALLOWED_TYPES = [
+  'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml',
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.ms-powerpoint',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  'text/plain', 'text/csv', 'text/markdown',
+  'application/zip', 'application/x-zip-compressed',
+]
+const MAX_FILE_SIZE = 10 * 1024 * 1024
+
 export const useTodoStore = create((set, get) => ({
   todos: [],
   loading: false,
@@ -108,6 +122,52 @@ export const useTodoStore = create((set, get) => ({
     })
 
     return result
+  },
+
+  uploadFile: async (todoId, file) => {
+    if (file.size > MAX_FILE_SIZE) return { error: '파일 크기는 10MB 이하만 가능합니다.' }
+    if (!ALLOWED_TYPES.includes(file.type)) return { error: '허용되지 않는 파일 형식입니다.' }
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: '로그인이 필요합니다.' }
+
+    const ext = file.name.split('.').pop()
+    const uuid = crypto.randomUUID()
+    const storagePath = `${user.id}/${todoId}/${uuid}.${ext}`
+
+    const { error: uploadError } = await supabase.storage
+      .from('todo-attachments')
+      .upload(storagePath, file, { contentType: file.type })
+    if (uploadError) return { error: uploadError.message }
+
+    const { error: dbError } = await supabase.from('todo_files').insert({
+      todo_id: todoId,
+      user_id: user.id,
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      storage_path: storagePath,
+    })
+    if (dbError) {
+      await supabase.storage.from('todo-attachments').remove([storagePath])
+      return { error: dbError.message }
+    }
+    return { error: null }
+  },
+
+  fetchFiles: async (todoId) => {
+    const { data, error } = await supabase
+      .from('todo_files')
+      .select('*')
+      .eq('todo_id', todoId)
+      .order('created_at', { ascending: true })
+    return error ? [] : data
+  },
+
+  deleteFile: async (fileId, storagePath) => {
+    await supabase.storage.from('todo-attachments').remove([storagePath])
+    const { error } = await supabase.from('todo_files').delete().eq('id', fileId)
+    return { error: error?.message ?? null }
   },
 
   getDashboardStats: () => {

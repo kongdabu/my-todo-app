@@ -3,6 +3,7 @@ import { X, Trash2 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { useTodoStore } from '../../store/todoStore'
+import FileAttachments from './FileAttachments'
 
 const statusOptions = ['미접수', '진행', '지연', '완료']
 const priorityOptions = ['긴급', '중요', '일반', '장기']
@@ -120,6 +121,8 @@ export default function DetailPanel() {
             </div>
           )}
         </div>
+
+        <FileAttachments todoId={selectedTodo.id} />
 
         <div className="grid grid-cols-2 gap-3">
           <div>
