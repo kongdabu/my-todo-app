@@ -17,7 +17,7 @@ export default function DetailPanel() {
   const autoResize = useCallback((el) => {
     if (!el) return
     el.style.height = 'auto'
-    el.style.height = Math.min(el.scrollHeight, 200) + 'px'
+    el.style.height = Math.min(el.scrollHeight, 300) + 'px'
   }, [])
 
   useEffect(() => {
@@ -106,13 +106,13 @@ export default function DetailPanel() {
               onBlur={() => { setIsDescFocused(false); handleBlur('description') }}
               placeholder="마크다운 형식으로 입력하세요..."
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none overflow-y-auto"
-              style={{ minHeight: '72px', maxHeight: '200px' }}
+              style={{ minHeight: '72px', maxHeight: '300px' }}
             />
           ) : (
             <div
               onClick={() => setIsDescFocused(true)}
               className="markdown-body w-full border border-gray-200 rounded-lg px-3 py-2 text-sm cursor-text overflow-y-auto hover:border-gray-300 transition-colors"
-              style={{ minHeight: '72px', maxHeight: '200px' }}
+              style={{ minHeight: '72px', maxHeight: '300px' }}
             >
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {form.description}
