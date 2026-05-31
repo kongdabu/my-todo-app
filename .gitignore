@@ -20,6 +20,9 @@ dist-ssr
 *.pem
 *.key
 
+# 임시 분석 워크스페이스 (커밋 대상 아님)
+_workspace/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
