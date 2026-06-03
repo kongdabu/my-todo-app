@@ -5,19 +5,27 @@ import { CheckSquare } from 'lucide-react'
 
 const AUTH_ERRORS = {
   'Invalid login credentials': '이메일 또는 비밀번호가 올바르지 않습니다.',
+  'invalid_credentials': '이메일 또는 비밀번호가 올바르지 않습니다.',
   'Email not confirmed': '이메일 인증이 완료되지 않았습니다. 확인 메일을 확인해 주세요.',
+  'email_not_confirmed': '이메일 인증이 완료되지 않았습니다. 확인 메일을 확인해 주세요.',
   'User already registered': '이미 가입된 이메일입니다.',
+  'user_already_exists': '이미 가입된 이메일입니다.',
   'Password should be at least 6 characters': '비밀번호는 최소 8자 이상이어야 합니다.',
   'Unable to validate email address: invalid format': '올바른 이메일 형식이 아닙니다.',
   'Email rate limit exceeded': '잠시 후 다시 시도해 주세요.',
+  'over_email_send_rate_limit': '잠시 후 다시 시도해 주세요.',
   'Too many requests': '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.',
+  'signup_disabled': '현재 회원가입이 비활성화되어 있습니다.',
+  'email_address_not_authorized': '허용되지 않은 이메일 주소입니다.',
 }
 
-const translateError = (msg) => {
+const translateError = (msg, code) => {
+  console.error('[Auth Error]', { message: msg, code })
+  if (code && AUTH_ERRORS[code]) return AUTH_ERRORS[code]
   for (const [key, value] of Object.entries(AUTH_ERRORS)) {
     if (msg?.includes(key)) return value
   }
-  return '오류가 발생했습니다. 다시 시도해 주세요.'
+  return `오류가 발생했습니다. (${msg ?? '알 수 없는 오류'})`
 }
 
 const validatePassword = (pw) => {
@@ -57,14 +65,14 @@ export default function Login() {
         password,
         options: { emailRedirectTo: redirectTo },
       })
-      if (error) setError(translateError(error.message))
+      if (error) setError(translateError(error.message, error.code))
       else setMessage('가입 확인 이메일을 발송했습니다. 이메일을 확인해 주세요.')
     } else {
       const { error } = await supabase.auth.signInWithPassword({
         email: trimmedEmail,
         password,
       })
-      if (error) setError(translateError(error.message))
+      if (error) setError(translateError(error.message, error.code))
       else navigate('/')
     }
 

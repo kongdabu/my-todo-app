@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
 import { useTodoStore } from './store/todoStore'
+import { supabase } from './lib/supabaseClient'
 import PrivateRoute from './components/auth/PrivateRoute'
 import Header from './components/layout/Header'
 import Sidebar from './components/layout/Sidebar'
@@ -32,9 +33,20 @@ function AppLayout() {
 
 export default function App() {
   const { init } = useAuthStore()
+  const { clearAll } = useTodoStore()
 
   useEffect(() => {
-    init()
+    let authUnsub
+    init().then((unsub) => { authUnsub = unsub })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') clearAll()
+    })
+
+    return () => {
+      authUnsub?.()
+      subscription.unsubscribe()
+    }
   }, [])
 
   return (

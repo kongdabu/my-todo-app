@@ -29,6 +29,12 @@ export const useTodoStore = create((set, get) => ({
   setSortOption: (option) => set({ sortOption: option }),
   setSearchQuery: (query) => set({ searchQuery: query }),
 
+  clearAll: () => set({
+    todos: [], selectedTodo: null,
+    sidebarFilter: 'all', sortOption: 'created_desc',
+    searchQuery: '', loading: false,
+  }),
+
   fetchTodos: async () => {
     set({ loading: true })
     const { data, error } = await supabase
@@ -49,10 +55,9 @@ export const useTodoStore = create((set, get) => ({
       (t) => t.due_date && t.status !== '완료' && t.status !== '지연' &&
         isAfter(today, startOfDay(new Date(t.due_date)))
     )
-    for (const t of toDelay) {
-      await supabase.from('todos').update({ status: '지연' }).eq('id', t.id).eq('user_id', user.id)
-    }
     if (toDelay.length > 0) {
+      const ids = toDelay.map((t) => t.id)
+      await supabase.from('todos').update({ status: '지연' }).in('id', ids).eq('user_id', user.id)
       await get().fetchTodos()
     }
   },
@@ -77,6 +82,16 @@ export const useTodoStore = create((set, get) => ({
   },
 
   deleteTodo: async (id) => {
+    const { data: files, error: fetchError } = await supabase
+      .from('todo_files').select('storage_path').eq('todo_id', id)
+
+    if (!fetchError && files?.length > 0) {
+      const { error: storageError } = await supabase.storage
+        .from('todo-attachments')
+        .remove(files.map((f) => f.storage_path))
+      if (storageError) console.error('[deleteTodo] storage 삭제 실패:', storageError.message)
+    }
+
     await supabase.from('todos').delete().eq('id', id)
     set({ selectedTodo: null })
     await get().fetchTodos()
@@ -135,9 +150,10 @@ export const useTodoStore = create((set, get) => ({
     const uuid = crypto.randomUUID()
     const storagePath = `${user.id}/${todoId}/${uuid}.${ext}`
 
+    const arrayBuffer = await file.arrayBuffer()
     const { error: uploadError } = await supabase.storage
       .from('todo-attachments')
-      .upload(storagePath, file, { contentType: file.type })
+      .upload(storagePath, arrayBuffer, { contentType: file.type || 'application/octet-stream' })
     if (uploadError) return { error: uploadError.message }
 
     const { error: dbError } = await supabase.from('todo_files').insert({

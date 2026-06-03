@@ -2,11 +2,24 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { X, Trash2 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { isValid, parseISO } from 'date-fns'
 import { useTodoStore } from '../../store/todoStore'
 import FileAttachments from './FileAttachments'
 
 const statusOptions = ['미접수', '진행', '지연', '완료']
 const priorityOptions = ['긴급', '중요', '일반', '장기']
+
+const SAFE_SCHEMES = ['http:', 'https:', 'mailto:']
+function safeUrlTransform(url) {
+  try {
+    const trimmed = url.trim().toLowerCase()
+    if (trimmed.startsWith('#') || trimmed.startsWith('/')) return url
+    const { protocol } = new URL(url, window.location.origin)
+    return SAFE_SCHEMES.includes(protocol) ? url : null
+  } catch {
+    return null
+  }
+}
 
 export default function DetailPanel() {
   const { selectedTodo, setSelectedTodo, updateTodo, deleteTodo } = useTodoStore()
@@ -47,6 +60,24 @@ export default function DetailPanel() {
   }
 
   const handleBlur = (field) => {
+    const value = form[field]
+
+    if (field === 'due_date') {
+      if (!value) { updateTodo(selectedTodo.id, { due_date: null }); return }
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || !isValid(parseISO(value))) {
+        setForm((prev) => ({ ...prev, due_date: selectedTodo.due_date }))
+        return
+      }
+    }
+
+    if (field === 'completed_at') {
+      if (!value) { updateTodo(selectedTodo.id, { completed_at: null }); return }
+      if (isNaN(new Date(value).getTime())) {
+        setForm((prev) => ({ ...prev, completed_at: selectedTodo.completed_at }))
+        return
+      }
+    }
+
     updateTodo(selectedTodo.id, { [field]: form[field] })
   }
 
@@ -115,7 +146,7 @@ export default function DetailPanel() {
               className="markdown-body w-full border border-gray-200 rounded-lg px-3 py-2 text-sm cursor-text overflow-y-auto hover:border-gray-300 transition-colors"
               style={{ minHeight: '72px', maxHeight: '300px' }}
             >
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              <ReactMarkdown remarkPlugins={[remarkGfm]} urlTransform={safeUrlTransform}>
                 {form.description}
               </ReactMarkdown>
             </div>
