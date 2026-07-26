@@ -12,7 +12,7 @@ export default function FileAttachments({ todoId }) {
 
   useEffect(() => {
     if (todoId) fetchFiles(todoId).then(setFiles)
-  }, [todoId])
+  }, [fetchFiles, todoId])
 
   const handleFiles = async (selected) => {
     setError(null)

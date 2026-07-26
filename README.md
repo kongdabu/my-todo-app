@@ -18,7 +18,7 @@ MS To-Do를 참고한 개인용 할 일 관리 웹앱.
 
 ## 주요 기능
 
-- 이메일/패스워드 로그인 및 회원가입 (Supabase Auth)
+- 이메일/패스워드 로그인, 회원가입, 비밀번호 재설정 (Supabase Auth)
 - 할 일 CRUD (제목, 설명, 상태, 우선순위, 납기일, 완료일)
 - MS To-Do 스타일 3-컬럼 레이아웃 (사이드바 / 목록 / 상세패널)
 - 상태별·우선순위별 필터링, 4가지 정렬, 제목 검색
@@ -45,6 +45,12 @@ npm run dev
 1. [Supabase](https://supabase.com)에서 새 프로젝트 생성
 2. SQL Editor에서 `supabase/schema.sql` 전체 내용 실행
 3. 프로젝트 Settings > API에서 URL과 anon key 복사 후 `.env.local`에 입력
+4. Authentication > URL Configuration > Redirect URLs에 아래 주소 등록
+
+```
+http://localhost:5173/my-todo-app/reset-password
+https://kongdabu.github.io/my-todo-app/reset-password
+```
 
 ## 환경변수
 

@@ -23,7 +23,7 @@ function safeUrlTransform(url) {
 
 export default function DetailPanel() {
   const { selectedTodo, setSelectedTodo, updateTodo, deleteTodo } = useTodoStore()
-  const [form, setForm] = useState(null)
+  const [form, setForm] = useState(() => ({ ...selectedTodo }))
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isDescFocused, setIsDescFocused] = useState(false)
   const descRef = useRef(null)
@@ -35,10 +35,6 @@ export default function DetailPanel() {
   }, [])
 
   useEffect(() => {
-    if (selectedTodo) setForm({ ...selectedTodo })
-  }, [selectedTodo])
-
-  useEffect(() => {
     autoResize(descRef.current)
   }, [form?.description, autoResize])
 
@@ -46,7 +42,7 @@ export default function DetailPanel() {
     if (isDescFocused) autoResize(descRef.current)
   }, [isDescFocused, autoResize])
 
-  if (!selectedTodo || !form) return null
+  if (!selectedTodo) return null
 
   const handleChange = (field, value) => {
     const updated = { ...form, [field]: value }

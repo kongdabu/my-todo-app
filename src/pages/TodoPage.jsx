@@ -8,7 +8,7 @@ export default function TodoPage() {
   return (
     <div className="flex flex-1 overflow-hidden">
       <TodoList />
-      {selectedTodo && <DetailPanel />}
+      {selectedTodo && <DetailPanel key={selectedTodo.id} />}
     </div>
   )
 }
